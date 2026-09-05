@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title><%= candidato.nome %></title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+</head>
+
+<body class="bg-light">
+
+    <!-- Cabeçalho -->
+    <header class="bg-primary text-white py-4 shadow-sm">
+        <div class="container">
+            <h1 class="h3 mb-0 text-center">
+                Detalhes do Candidato
+            </h1>
+        </div>
+    </header>
+
+    <!-- Conteúdo -->
+    <main class="container py-5">
+
+        <div class="row justify-content-center">
+
+            <div class="col-12 col-md-8 col-lg-6">
+
+                <div class="card border-0 shadow">
+
+                    <!-- Foto -->
+                    <div class="text-center pt-4">
+                        <img
+                            src="<%= candidato.foto %>"
+                            alt="Foto de <%= candidato.nome %>"
+                            class="rounded-circle img-fluid shadow"
+                            style="width: 180px; height: 180px; object-fit: cover;"
+                        >
+                    </div>
+
+                    <!-- Informações -->
+                    <div class="card-body text-center">
+
+                        <h2 class="card-title mb-4">
+                            <%= candidato.nome %>
+                        </h2>
+
+                        <div class="list-group text-start">
+
+                            <div class="list-group-item">
+                                <strong>ID:</strong>
+                                <%= candidato.id %>
+                            </div>
+
+                            <div class="list-group-item">
+                                <strong>Nome:</strong>
+                                <%= candidato.nome %>
+                            </div>
+
+                            <div class="list-group-item">
+                                <strong>Origem:</strong>
+                                <%= candidato.origem %>
+                            </div>
+
+                            <div class="list-group-item">
+                                <strong>Número da urna:</strong>
+                                <%= candidato.numeroUrna %>
+                            </div>
+
+                        </div>
+
+                        <!-- Botão voltar -->
+                        <div class="mt-4">
+                            <a href="/candidatos" class="btn btn-primary">
+                                Voltar para candidatos
+                            </a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "eleicoes_fic",
+  "version": "1.0.0",
+  "description": "eleições fitcticias senac",
+  "homepage": "https://github.com/MiguelFerreira31/eleicoes_fic#readme",
+  "bugs": {
+    "url": "https://github.com/MiguelFerreira31/eleicoes_fic/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MiguelFerreira31/eleicoes_fic.git"
+  },
+  "license": "MIT",
+  "author": "MiguelFerreira31",
+  "type": "module",
+  "main": "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "ejs": "^6.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
