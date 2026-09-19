@@ -1,5 +1,176 @@
-   <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    <footer class="rodape">
+        <div class="container">
+            <strong>Eleições FIC</strong>
+            <span>Eleições fictícias do Senac, feitas para praticar desenvolvimento web.</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        var raiz = document.documentElement
+        var reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches
+        var ponteiroFino = matchMedia('(hover: hover) and (pointer: fine)').matches
+        var preloader = document.getElementById('preloader')
+        var inicio = performance.now()
+
+        // ---------- Menu: destaca a seção atual ----------
+        var secao = location.pathname.indexOf('/painel') === 0 ? '/painel' : '/candidatos'
+        document.querySelectorAll('a[data-nav]').forEach(function (link) {
+            if (link.getAttribute('href') === secao) link.setAttribute('aria-current', 'page')
+        })
+
+        // ---------- Menu mobile ----------
+        var menuBotao = document.querySelector('.menu-botao')
+        function alternarMenu(abrir) {
+            raiz.classList.toggle('menu-aberto', abrir)
+            menuBotao.setAttribute('aria-expanded', abrir)
+            menuBotao.setAttribute('aria-label', abrir ? 'Fechar menu' : 'Abrir menu')
+        }
+        menuBotao.addEventListener('click', function () {
+            alternarMenu(!raiz.classList.contains('menu-aberto'))
+        })
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') alternarMenu(false)
+        })
+
+        // ---------- Preloader: some quando a página termina de carregar ----------
+        var carregou = false
+        function esconderPreloader() {
+            if (carregou) return
+            carregou = true
+            var espera = reduzido ? 0 : Math.max(0, 700 - (performance.now() - inicio))
+            setTimeout(function () {
+                preloader.classList.add('oculto')
+                iniciarRevelacao()
+            }, espera)
+        }
+        if (document.readyState === 'complete') esconderPreloader()
+        else window.addEventListener('load', esconderPreloader)
+        setTimeout(esconderPreloader, 4000) // imagens lentas não seguram a página
+
+        // Voltar pelo histórico restaura a página com a cortina fechada
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) preloader.classList.add('oculto')
+        })
+
+        // ---------- Cortina ao sair da página ----------
+        function cobrir(depois) {
+            alternarMenu(false)
+            preloader.style.transition = 'none'
+            preloader.classList.remove('oculto')
+            preloader.classList.add('abaixo')
+            void preloader.offsetHeight
+            preloader.style.transition = ''
+            preloader.classList.remove('abaixo')
+            setTimeout(depois, reduzido ? 0 : 650)
+        }
+
+        document.addEventListener('click', function (e) {
+            var link = e.target.closest('a[href]')
+            if (!link || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+            if (link.target === '_blank' || link.hasAttribute('download')) return
+            var destino = new URL(link.href, location.href)
+            if (destino.origin !== location.origin) return
+            if (destino.pathname === location.pathname && destino.search === location.search) return
+            e.preventDefault()
+            cobrir(function () { location.href = link.href })
+        })
+
+        document.addEventListener('submit', function (e) {
+            if (e.defaultPrevented) return
+            var form = e.target
+            e.preventDefault()
+            cobrir(function () { form.submit() })
+        })
+
+        // ---------- Revelação ao rolar + contadores ----------
+        function contar(el) {
+            var alvo = parseInt(el.getAttribute('data-contar'), 10) || 0
+            if (reduzido || alvo === 0) { el.textContent = alvo; return }
+            var t0 = performance.now()
+            ;(function passo(agora) {
+                var p = Math.min(1, (agora - t0) / 1100)
+                el.textContent = Math.round(alvo * (1 - Math.pow(1 - p, 4)))
+                if (p < 1) requestAnimationFrame(passo)
+            })(t0)
+        }
+
+        function revelar(el) {
+            el.classList.add('visivel')
+            el.querySelectorAll('[data-contar]').forEach(contar)
+        }
+
+        function iniciarRevelacao() {
+            var itens = document.querySelectorAll('[data-revelar]')
+            if (!('IntersectionObserver' in window)) return itens.forEach(revelar)
+            var observador = new IntersectionObserver(function (entradas) {
+                entradas.forEach(function (entrada) {
+                    if (!entrada.isIntersecting) return
+                    revelar(entrada.target)
+                    observador.unobserve(entrada.target)
+                })
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' })
+            itens.forEach(function (el) { observador.observe(el) })
+        }
+
+        if (!ponteiroFino || reduzido) return
+
+        // ---------- Botões magnéticos ----------
+        document.querySelectorAll('.botao').forEach(function (botao) {
+            botao.addEventListener('mousemove', function (e) {
+                var r = botao.getBoundingClientRect()
+                botao.style.setProperty('--mx', ((e.clientX - r.left - r.width / 2) * 0.16) + 'px')
+                botao.style.setProperty('--my', ((e.clientY - r.top - r.height / 2) * 0.28) + 'px')
+            })
+            botao.addEventListener('mouseleave', function () {
+                botao.style.setProperty('--mx', '0px')
+                botao.style.setProperty('--my', '0px')
+            })
+        })
+
+        // ---------- Cursor personalizado ----------
+        var ponto = document.createElement('div')
+        var anel = document.createElement('div')
+        var rotulo = document.createElement('span')
+        var aro = document.createElement('b')
+        ponto.className = 'cursor-ponto'
+        anel.className = 'cursor-anel'
+        aro.appendChild(rotulo)
+        anel.appendChild(aro)
+        document.body.append(ponto, anel)
+        raiz.classList.add('cursor-custom')
+
+        var x = -100, y = -100, ax = -100, ay = -100, seguindo = false
+        document.addEventListener('mousemove', function (e) {
+            x = e.clientX
+            y = e.clientY
+            ponto.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+            raiz.classList.add('cursor-visivel')
+            if (!seguindo) { seguindo = true; requestAnimationFrame(seguir) }
+        })
+        document.addEventListener('mouseleave', function () { raiz.classList.remove('cursor-visivel') })
+        document.addEventListener('mousedown', function () { raiz.classList.add('cursor-pressionado') })
+        document.addEventListener('mouseup', function () { raiz.classList.remove('cursor-pressionado') })
+
+        document.addEventListener('mouseover', function (e) {
+            var alvo = e.target.closest('a, button, [data-cursor]')
+            var texto = e.target.closest('input, textarea, select')
+            var legenda = alvo && alvo.getAttribute('data-cursor')
+            raiz.classList.toggle('cursor-ativo', !!alvo && !legenda)
+            raiz.classList.toggle('cursor-rotulo', !!legenda)
+            raiz.classList.toggle('cursor-texto', !!texto)
+            if (legenda) rotulo.textContent = legenda
+        })
+
+        // O anel persegue o ponto e para o loop quando o alcança
+        function seguir() {
+            ax += (x - ax) * 0.18
+            ay += (y - ay) * 0.18
+            anel.style.transform = 'translate(' + ax + 'px,' + ay + 'px)'
+            if (Math.abs(x - ax) + Math.abs(y - ay) > 0.2) requestAnimationFrame(seguir)
+            else seguindo = false
+        }
+    })()
     </script>
 
 </body>

@@ -1,83 +1,124 @@
 <%- include('partials/cabecalho.ejs') %>
 
-<body class="bg-light">
+<style>
+    /* Grade uniforme: todos os cartões têm o mesmo tamanho e a mesma estrutura */
+    .cedula {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
 
-    <header class="bg-primary text-white py-4 shadow-sm">
-        <div class="container">
-            <h1 class="h3 mb-0 text-center">
-                <%= titulo %>
-            </h1>
-        </div>
-    </header>
+    .cartao {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        color: inherit;
+        text-decoration: none;
+    }
 
-    <main class="container py-5">
+    .cartao-foto {
+        overflow: hidden;
+        aspect-ratio: 4 / 3;
+        border-radius: 18px;
+        background: var(--fundo-2);
+    }
 
-        <section class="row justify-content-center">
-            <div class="col-12 col-md-8 col-lg-6">
+    .cartao-foto img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 1.4s var(--mola);
+    }
 
-                <div class="card border-0 shadow-sm">
+    .cartao:hover .cartao-foto img { transform: scale(1.05); }
 
-                    <div class="card-header bg-white py-3">
-                        <h2 class="h5 mb-0 text-dark">
-                            Candidatos teste do server
-                        </h2>
-                    </div>
+    .cartao-corpo {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 12px 12px;
+    }
 
-                    <div class="card-body p-0">
+    .cartao-nome {
+        font-size: 1.5rem;
+        font-weight: 800;
+        font-stretch: 115%;
+        letter-spacing: -.03em;
+    }
 
-                        <ul class="list-group list-group-flush">
+    .cartao-origem { display: block; margin-top: 6px; color: var(--suave); font-size: .9375rem; }
 
-                            <% if (candidatos && candidatos.length > 0) { %>
+    .cartao .numero-urna { flex-shrink: 0; font-size: 1.125rem; }
 
-                                <% candidatos.forEach(candidato => { %>
+    .cartao-seta {
+        position: absolute;
+        top: 22px;
+        right: 22px;
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .88);
+        color: var(--tinta);
+        transition: transform .6s var(--mola), background .4s var(--mola), color .4s var(--mola);
+    }
 
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+    .cartao:hover .cartao-seta { transform: translate(3px, -3px) scale(1.06); background: var(--confirma); color: #fff; }
+</style>
 
-                                        <!-- Foto + Nome -->
-                                        <div class="d-flex align-items-center">
+<main>
+    <div class="container">
 
-                                            <img
-                                                src="<%= candidato.foto %>"
-                                                alt="Foto de <%= candidato.nome %>"
-                                                class="rounded-circle me-3"
-                                                style="width: 50px; height: 50px; object-fit: cover;"
-                                            >
-
-                                            <span>
-                                                <%= candidato.nome %>
-                                            </span>
-
-                                        </div>
-
-                                        <!-- Botão -->
-                                        <a
-                                            href="/candidato/<%= candidato.numeroUrna %>"
-                                            class="btn btn-sm btn-primary"
-                                        >
-                                            Ver Detalhes
-                                        </a>
-
-                                    </li>
-
-                                <% }) %>
-
-                            <% } else { %>
-
-                                <li class="list-group-item text-center">
-                                    Nenhum candidato encontrado.
-                                </li>
-
-                            <% } %>
-
-                        </ul>
-
-                    </div>
-
-                </div>
-
-            </div>
+        <section class="hero" data-revelar>
+            <span class="selo"><%= candidatos.length %> <%= candidatos.length === 1 ? 'candidato na disputa' : 'candidatos na disputa' %></span>
+            <h1 class="titulo"><%= titulo %></h1>
+            <p class="subtitulo">Conheça quem está concorrendo. Na urna, cada candidato é identificado pelo número que aparece no cartão.</p>
         </section>
 
-    </main>
+        <% if (candidatos && candidatos.length > 0) { %>
+            <ul class="cedula" aria-label="Candidatos">
+                <% candidatos.forEach((candidato, i) => { %>
+                    <li class="casca" data-revelar style="--atraso: <%= i * 0.08 %>s">
+                        <a class="cartao nucleo" href="/candidato/<%= candidato.numeroUrna %>" data-cursor="Ver perfil">
+                            <div class="cartao-foto">
+                                <img src="<%= candidato.foto %>" alt="" width="300" height="300" loading="lazy">
+                            </div>
 
- <%- include('partials/rodape.ejs') %>
+                            <div class="cartao-corpo">
+                                <div>
+                                    <h2 class="cartao-nome"><%= candidato.nome %></h2>
+                                    <% if (candidato.origem) { %>
+                                        <span class="cartao-origem">Origem: <%= candidato.origem.charAt(0).toUpperCase() + candidato.origem.slice(1) %></span>
+                                    <% } %>
+                                </div>
+                                <%- include('partials/numero.ejs', { numero: candidato.numeroUrna }) %>
+                            </div>
+
+                            <span class="cartao-seta"><%- include('partials/seta.ejs') %></span>
+                        </a>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <div class="casca" data-revelar>
+                <div class="nucleo vazio">
+                    <strong>Nenhum candidato cadastrado</strong>
+                    Cadastre o primeiro candidato pelo painel.
+                    <div class="acoes">
+                        <a href="/painel" class="botao botao-confirma">Abrir painel <span class="botao-icone"><%- include('partials/seta.ejs') %></span></a>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+    </div>
+</main>
+
+<%- include('partials/rodape.ejs') %>

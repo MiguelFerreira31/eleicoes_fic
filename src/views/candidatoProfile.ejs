@@ -1,103 +1,106 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<%- include('partials/cabecalho.ejs') %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    .perfil {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        gap: 72px;
+        align-items: center;
+        padding-top: 72px;
+    }
 
-    <title><%= candidato.nome %></title>
+    .perfil-retrato { transform: rotate(-2deg); }
 
-    <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-    <link rel="shortcut icon" href="<%= candidato.foto %>"" type="image/x-icon">
-</head>
+    .perfil-retrato .nucleo { padding: 10px; }
 
-<body class="bg-light">
+    .perfil-retrato img {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        border-radius: 18px;
+        background: var(--fundo-2);
+    }
 
-    <!-- Cabeçalho -->
-    <header class="bg-primary text-white py-4 shadow-sm">
-        <div class="container">
-            <h1 class="h3 mb-0 text-center">
-                Detalhes do Candidato
-            </h1>
-        </div>
-    </header>
+    .perfil-nome {
+        font-size: clamp(2.75rem, 6.5vw, 5.25rem);
+        font-weight: 800;
+        font-stretch: 125%;
+        letter-spacing: -.045em;
+        line-height: .95;
+        margin: 22px 0 40px;
+    }
 
-    <!-- Conteúdo -->
-    <main class="container py-5">
+    .perfil-dados {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 28px;
+        align-items: center;
+        margin: 0 0 40px;
+        padding: 28px;
+    }
 
-        <div class="row justify-content-center">
+    .perfil-dados dt { color: var(--suave); font-size: .875rem; margin-bottom: 10px; }
+    .perfil-dados dd { margin: 0; }
 
-            <div class="col-12 col-md-8 col-lg-6">
+    .perfil-origem { font: 700 1.5rem/1.1 var(--display); font-stretch: 115%; letter-spacing: -.02em; }
 
-                <div class="card border-0 shadow">
+    .perfil-divisor { padding-left: 28px; box-shadow: inset 1px 0 0 var(--anel); }
 
-                    <!-- Foto -->
-                    <div class="text-center pt-4">
-                        <img
-                            src="<%= candidato.foto %>"
-                            alt="Foto de <%= candidato.nome %>"
-                            class="rounded-circle img-fluid shadow"
-                            style="width: 180px; height: 180px; object-fit: cover;"
-                        >
-                    </div>
+    @media (max-width: 900px) {
+        .perfil { grid-template-columns: 1fr; gap: 48px; padding-top: 40px; }
+        .perfil-retrato { transform: none; max-width: 420px; }
+    }
 
-                    <!-- Informações -->
-                    <div class="card-body text-center">
+    @media (max-width: 480px) {
+        .perfil-dados { grid-template-columns: 1fr; gap: 20px; padding: 22px; }
+        .perfil-divisor { padding: 20px 0 0; box-shadow: inset 0 1px 0 var(--anel); }
+    }
+</style>
 
-                        <h2 class="card-title mb-4">
-                            <%= candidato.nome %>
-                        </h2>
+<main>
+    <div class="container">
 
-                        <div class="list-group text-start">
-
-                            <div class="list-group-item">
-                                <strong>ID:</strong>
-                                <%= candidato.id %>
-                            </div>
-
-                            <div class="list-group-item">
-                                <strong>Nome:</strong>
-                                <%= candidato.nome %>
-                            </div>
-
-                            <div class="list-group-item">
-                                <strong>Origem:</strong>
-                                <%= candidato.origem %>
-                            </div>
-
-                            <div class="list-group-item">
-                                <strong>Número da urna:</strong>
-                                <%= candidato.numeroUrna %>
-                            </div>
-
-                        </div>
-
-                        <!-- Botão voltar -->
-                        <div class="mt-4">
-                            <a href="/candidatos" class="btn btn-primary">
-                                Voltar para candidatos
-                            </a>
-                        </div>
-
-                    </div>
-
+        <div class="perfil">
+            <div class="casca perfil-retrato" data-revelar>
+                <div class="nucleo">
+                    <img src="<%= candidato.foto %>" alt="Foto de <%= candidato.nome %>" width="300" height="375">
                 </div>
-
             </div>
 
+            <div data-revelar style="--atraso: .12s">
+                <a class="voltar" href="/candidatos">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Todos os candidatos
+                </a>
+
+                <h1 class="perfil-nome"><%= candidato.nome %></h1>
+
+                <div class="casca">
+                    <dl class="nucleo perfil-dados">
+                        <div>
+                            <dt>Número na urna</dt>
+                            <dd><%- include('partials/numero.ejs', { numero: candidato.numeroUrna, grande: true }) %></dd>
+                        </div>
+                        <% if (candidato.origem) { %>
+                            <div class="perfil-divisor">
+                                <dt>Origem</dt>
+                                <dd class="perfil-origem"><%= candidato.origem.charAt(0).toUpperCase() + candidato.origem.slice(1) %></dd>
+                            </div>
+                        <% } %>
+                    </dl>
+                </div>
+
+                <div class="acoes" style="margin-top: 32px">
+                    <a href="/voto/<%= candidato.numeroUrna %>" class="botao botao-confirma">
+                        Ver votos recebidos
+                        <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
+                    </a>
+                    <a href="/candidatos" class="botao botao-contorno" style="padding-right: 24px">Voltar à lista</a>
+                </div>
+            </div>
         </div>
 
-    </main>
+    </div>
+</main>
 
-    <!-- Bootstrap JS -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
-
-</body>
-
-</html>
+<%- include('partials/rodape.ejs') %>

@@ -1,0 +1,97 @@
+<%- include('partials/cabecalho.ejs') %>
+
+<%
+    const lista = (votos || []).slice().sort((a, b) => b.votos - a.votos)
+    const total = lista.reduce((soma, v) => soma + v.votos, 0)
+    const maior = lista.length ? lista[0].votos : 0
+    const pct = v => total ? Math.round((v / total) * 1000) / 10 : 0
+%>
+
+<style>
+    .apuracao { list-style: none; margin: 0; padding: 8px 0; }
+
+    .apuracao li + li { box-shadow: inset 0 1px 0 var(--anel); }
+
+    .resultado {
+        display: grid;
+        grid-template-columns: 120px 1fr 120px auto;
+        align-items: center;
+        gap: 28px;
+        padding: 22px 28px;
+    }
+
+    .resultado .numero-urna { font-size: 1.125rem; }
+
+    .barra { height: 10px; border-radius: 99px; overflow: hidden; background: var(--fundo); }
+
+    .barra span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--grafite);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 1.4s var(--mola) .3s;
+    }
+
+    .visivel .barra span { transform: scaleX(1); }
+
+    .lider .barra span { background: linear-gradient(90deg, var(--confirma), var(--confirma-brilho)); }
+
+    .contagem { text-align: right; font-variant-numeric: tabular-nums; line-height: 1.3; }
+    .contagem b { display: block; font: 700 1.25rem/1.2 var(--display); }
+    .contagem small { color: var(--suave); font-size: .875rem; }
+
+    .resultado .botao { padding-right: 20px; min-height: 44px; }
+
+    @media (max-width: 767px) {
+        .resultado { grid-template-columns: 1fr auto; gap: 14px; padding: 20px; }
+        .barra { grid-column: 1 / -1; grid-row: 2; }
+        .resultado .botao { grid-column: 1 / -1; justify-content: center; }
+    }
+</style>
+
+<main>
+    <div class="container">
+
+        <section class="hero" data-revelar>
+            <span class="selo"><%= total %> <%= total === 1 ? 'voto apurado' : 'votos apurados' %></span>
+            <h1 class="titulo">Apuração</h1>
+            <p class="subtitulo">Votos por número de candidato, do mais votado para o menos votado.</p>
+        </section>
+
+        <div class="casca" data-revelar>
+            <div class="nucleo">
+                <% if (lista.length > 0) { %>
+                    <ol class="apuracao">
+                        <% lista.forEach(voto => { %>
+                            <li class="resultado<%= voto.votos === maior && maior > 0 ? ' lider' : '' %>">
+                                <%- include('partials/numero.ejs', { numero: voto.candidatoId }) %>
+
+                                <div class="barra" aria-hidden="true">
+                                    <span style="width: <%= maior ? (voto.votos / maior) * 100 : 0 %>%"></span>
+                                </div>
+
+                                <div class="contagem">
+                                    <b><%= voto.votos %> <%= voto.votos === 1 ? 'voto' : 'votos' %></b>
+                                    <small><%= pct(voto.votos).toLocaleString('pt-BR') %>% do total</small>
+                                </div>
+
+                                <a href="/candidato/<%= voto.candidatoId %>" class="botao botao-contorno"
+                                   aria-label="Ver candidato número <%= voto.candidatoId %>">Ver candidato</a>
+                            </li>
+                        <% }) %>
+                    </ol>
+                <% } else { %>
+                    <div class="vazio">
+                        <strong>Nenhum voto apurado ainda</strong>
+                        Os resultados aparecem aqui assim que os primeiros votos forem registrados.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<%- include('partials/rodape.ejs') %>

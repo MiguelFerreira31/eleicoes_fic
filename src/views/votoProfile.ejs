@@ -1,141 +1,82 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<%- include('partials/cabecalho.ejs') %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    .apurado {
+        display: grid;
+        grid-template-columns: 7fr 5fr;
+        gap: 20px;
+    }
 
-    <title><%= titulo %></title>
+    .apurado .nucleo { padding: 36px; }
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    .total { display: flex; flex-direction: column; justify-content: space-between; min-height: 340px; }
 
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-        }
+    .total-rotulo { color: var(--suave); font-size: .9375rem; }
 
-        header {
-            background-color: #222;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
+    .total-votos {
+        font: 900 clamp(6rem, 18vw, 11rem)/.8 var(--display);
+        font-stretch: 125%;
+        letter-spacing: -.06em;
+        font-variant-numeric: tabular-nums;
+    }
 
-        main {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+    .total-legenda { font: 700 1.5rem/1.2 var(--display); font-stretch: 115%; letter-spacing: -.02em; }
 
-        h1 {
-            margin-bottom: 30px;
-            text-align: center;
-        }
+    .candidato-card { display: flex; flex-direction: column; justify-content: space-between; gap: 32px; height: 100%; }
 
-        .candidatos {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
+    .candidato-card dt { color: var(--suave); font-size: .9375rem; margin-bottom: 14px; }
+    .candidato-card dd { margin: 0; }
 
-        .candidato {
-            background-color: white;
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
+    .escuro .nucleo { background: var(--grafite); color: #fff; }
+    .escuro .total-rotulo { color: rgba(255, 255, 255, .6); }
 
-        .candidato img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-        }
+    @media (max-width: 900px) {
+        .apurado { grid-template-columns: 1fr; }
+        .total { min-height: 260px; }
+        .apurado .nucleo { padding: 26px; }
+    }
+</style>
 
-        .candidato h2 {
-            margin-bottom: 10px;
-            color: #222;
-        }
+<main>
+    <div class="container">
 
-        .numero {
-            color: #666;
-            margin-bottom: 20px;
-        }
+        <section class="hero" data-revelar>
+            <a class="voltar" href="/candidato/<%= voto.candidatoId %>" style="margin-bottom: 28px">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Perfil do candidato
+            </a>
+            <h1 class="titulo"><%= titulo %></h1>
+        </section>
 
-        .votos {
-            background-color: #222;
-            color: white;
-            border-radius: 8px;
-            padding: 15px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .votos span {
-            display: block;
-            font-size: 14px;
-            font-weight: normal;
-            margin-top: 5px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <header>
-        <h1><%= titulo %></h1>
-    </header>
-
-    <main>
-
-        <div class="candidatos">
-
-            <% votos.forEach(voto => { %>
-
-                <% const candidato = candidatos.find(
-                    candidato => candidato.numeroUrna === voto.candidatoId
-                ) %>
-
-                <% if (candidato) { %>
-
-                    <div class="candidato">
-
-                        <img
-                            src="<%= candidato.foto %>"
-                            alt="Foto de <%= candidato.nome %>"
-                        >
-
-                        <h2>
-                            <%= candidato.nome %>
-                        </h2>
-
-                        <p class="numero">
-                            Número: <%= candidato.numeroUrna %>
-                        </p>
-
-                        <div class="votos">
-                            <%= voto.votos %>
-                            <span>voto(s)</span>
-                        </div>
-
+        <div class="apurado">
+            <div class="casca escuro" data-revelar>
+                <div class="nucleo total">
+                    <span class="total-rotulo">Resultado apurado até agora</span>
+                    <div>
+                        <div class="total-votos" data-contar="<%= voto.votos %>"><%= voto.votos %></div>
+                        <p class="total-legenda"><%= voto.votos === 1 ? 'voto recebido' : 'votos recebidos' %></p>
                     </div>
+                </div>
+            </div>
 
-                <% } %>
-
-            <% }) %>
-
+            <div class="casca" data-revelar style="--atraso: .1s">
+                <dl class="nucleo candidato-card">
+                    <div>
+                        <dt>Candidato</dt>
+                        <dd><%- include('partials/numero.ejs', { numero: voto.candidatoId, grande: true }) %></dd>
+                    </div>
+                    <div class="acoes">
+                        <a href="/candidato/<%= voto.candidatoId %>" class="botao botao-confirma">
+                            Ver perfil
+                            <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
+                        </a>
+                        <a href="/candidatos" class="botao botao-contorno" style="padding-right: 24px">Todos os candidatos</a>
+                    </div>
+                </dl>
+            </div>
         </div>
 
-    </main>
+    </div>
+</main>
 
-</body>
-
-</html>
+<%- include('partials/rodape.ejs') %>

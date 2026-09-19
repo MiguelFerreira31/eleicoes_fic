@@ -1,38 +1,175 @@
 <%- include('partials/cabecalho.ejs') %>
 
-    <main class="container mt-4">
-        <h1>Bem-vindo ao Sistema de Eleições</h1>
-        <p>Escolha uma das opções abaixo:</p>
-        <form action="/painel/cad-candidato" method="post">
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" name="nome" required>
+<style>
+    .painel-grade {
+        display: grid;
+        grid-template-columns: 5fr 7fr;
+        gap: 20px;
+        align-items: start;
+    }
 
-            <label for="numeroUrna">Número:</label>
-            <input type="number" id="numeroUrna" name="numeroUrna" required>
+    .bloco { padding: 32px; }
 
-            <button type="submit">Cadastrar Candidato</button>
+    .bloco .secao-titulo { margin-bottom: 6px; }
 
-        </form>
+    .bloco-descricao { margin: 0 0 28px; color: var(--suave); font-size: .9375rem; }
 
+    .campo { margin-bottom: 22px; }
 
-        <h2>Relatório de Eleições</h2>
-        <table>
-            <%for (const linha of relatorio) { %>
-                <tr>
-                    <td>
-                        <%= linha.nome %>
-                    </td>
-                    <td>
-                        <%= linha.numeroUrna %>
-                    </td>
-                    <td>
-                        <%= linha.votos %>
-                    </td>
-                </tr>
-                <% } %>
-        </table>
+    .campo label { display: block; margin-bottom: 8px; font-weight: 600; font-size: .9375rem; }
 
-        <a href="/painel/logout">Sair</a>
-    </main>
+    .campo small { display: block; margin-top: 8px; color: var(--suave); font-size: .8125rem; }
 
-    <%- include('partials/rodape.ejs') %>
+    .campo input {
+        width: 100%;
+        min-height: 52px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 16px;
+        background: var(--fundo);
+        box-shadow: inset 0 0 0 1px var(--anel), inset 0 2px 4px rgba(21, 25, 29, .04);
+        font: 500 1rem var(--texto);
+        color: var(--tinta);
+        transition: box-shadow .4s var(--mola), background .4s var(--mola);
+    }
+
+    .campo input:hover { box-shadow: inset 0 0 0 1px var(--anel-forte); }
+
+    .campo input:focus-visible {
+        outline: none;
+        background: #fff;
+        box-shadow: inset 0 0 0 1.5px var(--confirma), 0 0 0 5px rgba(31, 138, 76, .12);
+    }
+
+    .campo input:user-invalid { box-shadow: inset 0 0 0 1.5px var(--corrige); }
+
+    #numero {
+        max-width: 200px;
+        font: 700 1.375rem var(--display);
+        letter-spacing: .18em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bloco .botao { width: 100%; justify-content: space-between; margin-top: 8px; }
+
+    .relatorio-cabeca { padding: 32px 32px 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+
+    th, td { padding: 16px 32px; text-align: left; }
+
+    thead th { color: var(--suave); font-weight: 500; font-size: .875rem; }
+
+    tbody td { box-shadow: inset 0 1px 0 var(--anel); font-weight: 500; }
+
+    td.num, th.num { text-align: right; }
+
+    td.num { font: 700 1.125rem var(--display); }
+
+    tbody td { vertical-align: middle; }
+
+    .relatorio-candidato { display: flex; align-items: center; gap: 14px; }
+
+    .relatorio-candidato img {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        object-fit: cover;
+        background: var(--fundo-2);
+        box-shadow: 0 0 0 1px var(--anel);
+    }
+
+    @media (max-width: 900px) {
+        .painel-grade { grid-template-columns: 1fr; }
+        .bloco, .relatorio-cabeca { padding: 24px; }
+        th, td { padding: 14px 24px; }
+    }
+</style>
+
+<main>
+    <div class="container">
+
+        <section class="hero" data-revelar>
+            <span class="selo">Área administrativa</span>
+            <h1 class="titulo"><%= titulo %></h1>
+            <p class="subtitulo">
+                <% if (typeof usuario !== 'undefined' && usuario) { %>Olá, <%= usuario.login || usuario %>. <% } %>Cadastre candidatos e acompanhe o relatório da eleição.
+            </p>
+        </section>
+
+        <div class="painel-grade">
+
+            <section class="casca" aria-labelledby="titulo-cadastro" data-revelar>
+                <div class="nucleo bloco">
+                    <h2 class="secao-titulo" id="titulo-cadastro">Novo candidato</h2>
+                    <p class="bloco-descricao">Ele aparece na lista assim que for cadastrado.</p>
+
+                    <form action="/painel/cad-candidato" method="post">
+                        <div class="campo">
+                            <label for="nome">Nome</label>
+                            <input type="text" id="nome" name="nome" minlength="3" autocomplete="off" required>
+                            <small>Pelo menos 3 letras.</small>
+                        </div>
+
+                        <div class="campo">
+                            <label for="numero">Número na urna</label>
+                            <input type="number" id="numero" name="numero" min="1" max="99999" inputmode="numeric" required>
+                            <small>É o número que o eleitor digita para votar.</small>
+                        </div>
+
+                        <button type="submit" class="botao botao-confirma">
+                            Cadastrar candidato
+                            <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="casca" aria-labelledby="titulo-relatorio" data-revelar style="--atraso: .1s">
+                <div class="nucleo">
+                    <div class="relatorio-cabeca">
+                        <h2 class="secao-titulo" id="titulo-relatorio">Relatório da eleição</h2>
+                    </div>
+
+                    <% if (relatorio && relatorio.length > 0) { %>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Candidato</th>
+                                    <th scope="col">Número</th>
+                                    <th scope="col" class="num">Votos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% for (const linha of relatorio) { %>
+                                    <tr>
+                                        <td>
+                                            <span class="relatorio-candidato">
+                                                <% if (linha.foto) { %>
+                                                    <img src="<%= linha.foto %>" alt="" width="44" height="44" loading="lazy">
+                                                <% } %>
+                                                <%= linha.nome %>
+                                            </span>
+                                        </td>
+                                        <td><%- include('partials/numero.ejs', { numero: linha.numero ?? linha.numeroUrna }) %></td>
+                                        <td class="num"><%= linha.votos %></td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="vazio">
+                            <strong>Relatório vazio</strong>
+                            Os candidatos cadastrados e seus votos aparecem aqui.
+                        </div>
+                    <% } %>
+                </div>
+            </section>
+
+        </div>
+
+    </div>
+</main>
+
+<%- include('partials/rodape.ejs') %>

@@ -1,0 +1,4 @@
+<%# Número da urna em caixas, como no visor da urna eletrônica. Parâmetros: numero, grande (opcional) %>
+<p class="numero-urna<%= typeof grande !== 'undefined' && grande ? ' grande' : '' %>" aria-label="Número <%= numero %>">
+    <% String(numero).split('').forEach(digito => { %><span aria-hidden="true"><%= digito %></span><% }) %>
+</p>

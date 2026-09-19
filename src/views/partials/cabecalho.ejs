@@ -1,14 +1,595 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-js">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-        <%= titulo %>
-    </title>
+    <title><%= typeof titulo !== 'undefined' ? titulo + ' | ' : '' %>Eleições FIC</title>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>document.documentElement.className = 'js'</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Geist:wght@300..700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --fundo: #ECEEEA;
+            --fundo-2: #E2E5E0;
+            --painel: #FFFFFF;
+            --tinta: #15191D;
+            --suave: #5A636C;
+            --anel: rgba(21, 25, 29, .07);
+            --anel-forte: rgba(21, 25, 29, .14);
+            --casca: rgba(21, 25, 29, .035);
+            --grafite: #1D2227;
+            --confirma: #1F8A4C;
+            --confirma-escuro: #176B3A;
+            --confirma-brilho: #3CC17A;
+            --corrige: #C4561A;
+
+            --mola: cubic-bezier(.32, .72, 0, 1);
+            --cortina: cubic-bezier(.76, 0, .24, 1);
+            --sombra: 0 1px 1px rgba(21, 25, 29, .03), 0 30px 60px -32px rgba(21, 25, 29, .22);
+
+            --display: 'Archivo', system-ui, sans-serif;
+            --texto: 'Geist', system-ui, sans-serif;
+            --largura: 1180px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { background: var(--fundo); }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background:
+                radial-gradient(60rem 40rem at 85% -10%, rgba(60, 193, 122, .10), transparent 60%),
+                radial-gradient(50rem 36rem at -10% 20%, rgba(255, 255, 255, .9), transparent 60%),
+                var(--fundo);
+            color: var(--tinta);
+            font-family: var(--texto);
+            font-size: 1rem;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Grão de papel sobre a página (fixo, não interfere nos cliques) */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 35;
+            pointer-events: none;
+            opacity: .045;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        img { max-width: 100%; display: block; }
+
+        a { color: var(--confirma-escuro); }
+
+        ::selection { background: var(--confirma); color: #fff; }
+
+        :focus-visible {
+            outline: 2px solid var(--confirma);
+            outline-offset: 3px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: var(--largura);
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        h1, h2, h3 { margin: 0; line-height: 1.05; font-family: var(--display); }
+
+        /* ---------- Preloader: visor da urna ---------- */
+
+        .preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: grid;
+            place-items: center;
+            background: var(--grafite);
+            color: #fff;
+            transition: transform .9s var(--cortina), visibility 0s;
+        }
+
+        .no-js .preloader,
+        .preloader.oculto { transform: translateY(-100%); visibility: hidden; transition: transform .9s var(--cortina), visibility 0s .9s; }
+
+        .preloader.oculto * { animation-play-state: paused; }
+
+        .preloader.abaixo { transform: translateY(100%); }
+
+        .preloader-urna {
+            display: grid;
+            justify-items: center;
+            gap: 22px;
+            transition: opacity .5s var(--mola), transform .9s var(--mola);
+        }
+
+        .preloader.oculto .preloader-urna { opacity: 0; transform: translateY(-40px); }
+
+        .preloader-visor { display: flex; gap: 8px; }
+
+        .preloader-visor span {
+            width: 52px;
+            height: 68px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .06);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 1px 0 rgba(255, 255, 255, .08);
+        }
+
+        .preloader-visor i {
+            display: block;
+            font: normal 800 2.25rem/68px var(--display);
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            white-space: pre-line;
+            animation: rolar 1.4s steps(10) infinite;
+        }
+
+        .preloader-visor span:nth-child(2) i { animation-duration: 1.1s; animation-direction: reverse; }
+        .preloader-visor span:nth-child(3) i { animation-duration: 1.7s; }
+
+        @keyframes rolar { to { transform: translateY(-680px); } }
+
+        .preloader-barra {
+            width: 172px;
+            height: 4px;
+            border-radius: 99px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, .1);
+        }
+
+        .preloader-barra span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--confirma-brilho);
+            transform-origin: left;
+            animation: confirmar 1.6s var(--mola) infinite;
+        }
+
+        @keyframes confirmar {
+            0% { transform: scaleX(0); }
+            60% { transform: scaleX(1); opacity: 1; }
+            100% { transform: scaleX(1); opacity: 0; }
+        }
+
+        .preloader p { margin: 0; font-size: .875rem; color: rgba(255, 255, 255, .6); letter-spacing: .01em; }
+
+        /* ---------- Cursor personalizado ---------- */
+
+        .cursor-custom, .cursor-custom * { cursor: none !important; }
+        .cursor-custom input, .cursor-custom textarea { cursor: text !important; }
+
+        .cursor-ponto, .cursor-anel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 40;
+            pointer-events: none;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity .3s var(--mola);
+        }
+
+        .cursor-ponto {
+            width: 6px;
+            height: 6px;
+            margin: -3px 0 0 -3px;
+            background: var(--confirma);
+        }
+
+        .cursor-anel {
+            width: 40px;
+            height: 40px;
+            margin: -20px 0 0 -20px;
+        }
+
+        .cursor-anel b {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            border: 1px solid var(--anel-forte);
+            font: 600 .6875rem/1 var(--texto);
+            color: #fff;
+            white-space: nowrap;
+            transition: transform .5s var(--mola), background .4s var(--mola), border-color .4s var(--mola);
+        }
+
+        .cursor-anel b span { display: block; opacity: 0; transform: scale(.6); transition: opacity .3s var(--mola), transform .5s var(--mola); }
+
+        .cursor-visivel .cursor-ponto, .cursor-visivel .cursor-anel { opacity: 1; }
+        .cursor-ativo .cursor-anel b { transform: scale(1.5); background: rgba(31, 138, 76, .1); border-color: rgba(31, 138, 76, .45); }
+        .cursor-ativo .cursor-ponto { opacity: 0; }
+        .cursor-rotulo .cursor-anel b { transform: scale(2.3); background: var(--confirma); border-color: transparent; }
+        .cursor-rotulo .cursor-anel b span { opacity: 1; transform: scale(.44); }
+        .cursor-pressionado .cursor-anel b { transform: scale(.8); }
+        .cursor-texto .cursor-ponto, .cursor-texto .cursor-anel { opacity: 0; }
+
+        /* ---------- Navegação em ilha ---------- */
+
+        .topo {
+            position: sticky;
+            top: 16px;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            padding: 16px 16px 0;
+            pointer-events: none;
+        }
+
+        .ilha {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            padding: 6px 6px 6px 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .72);
+            -webkit-backdrop-filter: blur(18px) saturate(1.4);
+            backdrop-filter: blur(18px) saturate(1.4);
+            box-shadow: 0 0 0 1px var(--anel), 0 18px 40px -24px rgba(21, 25, 29, .35), inset 0 1px 0 rgba(255, 255, 255, .9);
+        }
+
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--tinta);
+            text-decoration: none;
+            font: 800 1.0625rem/1 var(--display);
+            font-stretch: 120%;
+            letter-spacing: -.02em;
+        }
+
+        .marca-tecla {
+            width: 20px;
+            height: 14px;
+            border-radius: 4px;
+            background: var(--confirma);
+            box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22), 0 4px 10px -3px rgba(31, 138, 76, .7);
+        }
+
+        .ilha-links { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+
+        .ilha-links a {
+            display: block;
+            padding: 9px 16px;
+            border-radius: 999px;
+            color: var(--suave);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: .9375rem;
+            transition: color .4s var(--mola), background .4s var(--mola);
+        }
+
+        .ilha-links a:hover { color: var(--tinta); background: rgba(21, 25, 29, .05); }
+
+        .ilha-links a[aria-current="page"] { color: #fff; background: var(--grafite); }
+
+        .menu-botao {
+            display: none;
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--grafite);
+        }
+
+        .menu-botao span {
+            position: absolute;
+            left: 14px;
+            width: 16px;
+            height: 1.5px;
+            border-radius: 2px;
+            background: #fff;
+            transition: transform .6s var(--mola);
+        }
+
+        .menu-botao span:first-child { top: 18px; }
+        .menu-botao span:last-child { top: 24px; }
+
+        .menu-aberto .menu-botao span:first-child { transform: translateY(3px) rotate(45deg); }
+        .menu-aberto .menu-botao span:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+        .menu-tela {
+            position: fixed;
+            inset: 0;
+            z-index: 19;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            background: rgba(236, 238, 234, .86);
+            -webkit-backdrop-filter: blur(28px);
+            backdrop-filter: blur(28px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .5s var(--mola), visibility 0s .5s;
+        }
+
+        .menu-aberto .menu-tela { opacity: 1; visibility: visible; transition: opacity .5s var(--mola); }
+
+        .menu-tela ul { list-style: none; margin: 0; padding: 0; }
+
+        .menu-tela li { overflow: hidden; }
+
+        .menu-tela a {
+            display: block;
+            padding: 6px 0;
+            color: var(--tinta);
+            text-decoration: none;
+            font: 800 clamp(2.5rem, 12vw, 4rem)/1.05 var(--display);
+            font-stretch: 120%;
+            letter-spacing: -.035em;
+            transform: translateY(110%);
+            transition: transform .8s var(--mola);
+        }
+
+        .menu-tela a[aria-current="page"] { color: var(--confirma); }
+
+        .menu-aberto .menu-tela a { transform: none; }
+        .menu-aberto .menu-tela li:nth-child(2) a { transition-delay: .07s; }
+
+        /* ---------- Cabeçalho das páginas ---------- */
+
+        main { flex: 1; padding: 0 0 128px; }
+
+        .hero { padding: 96px 0 56px; max-width: 900px; }
+
+        .selo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 6px 14px 6px 10px;
+            border-radius: 999px;
+            background: var(--painel);
+            box-shadow: 0 0 0 1px var(--anel), 0 6px 16px -10px rgba(21, 25, 29, .3);
+            font-size: .8125rem;
+            font-weight: 500;
+            color: var(--suave);
+        }
+
+        .selo::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--confirma-brilho);
+            box-shadow: 0 0 0 4px rgba(60, 193, 122, .18);
+        }
+
+        .titulo {
+            font-size: clamp(2.75rem, 7.4vw, 6rem);
+            font-weight: 800;
+            font-stretch: 125%;
+            letter-spacing: -.045em;
+            line-height: .95;
+        }
+
+        .subtitulo {
+            max-width: 52ch;
+            margin: 24px 0 0;
+            color: var(--suave);
+            font-size: 1.125rem;
+            line-height: 1.65;
+        }
+
+        .secao-titulo {
+            font-size: 1.375rem;
+            font-weight: 700;
+            font-stretch: 112%;
+            letter-spacing: -.02em;
+        }
+
+        .voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--suave);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: .9375rem;
+            transition: color .4s var(--mola);
+        }
+
+        .voltar svg { transition: transform .5s var(--mola); }
+        .voltar:hover { color: var(--tinta); }
+        .voltar:hover svg { transform: translateX(-4px); }
+
+        /* ---------- Cartão em moldura dupla ---------- */
+
+        .casca {
+            padding: 6px;
+            border-radius: 30px;
+            background: var(--casca);
+            box-shadow: 0 0 0 1px var(--anel);
+        }
+
+        .nucleo {
+            height: 100%;
+            border-radius: 24px;
+            background: var(--painel);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, .9), var(--sombra);
+        }
+
+        /* ---------- Número da urna (dígitos em caixas) ---------- */
+
+        .numero-urna { display: inline-flex; gap: 5px; margin: 0; }
+
+        .numero-urna span {
+            display: grid;
+            place-items: center;
+            width: 1.5em;
+            height: 1.9em;
+            border-radius: .3em;
+            background: #fff;
+            box-shadow: 0 0 0 1px var(--anel-forte), inset 0 -2px 0 rgba(21, 25, 29, .06), 0 8px 16px -10px rgba(21, 25, 29, .35);
+            font: 700 1em/1 var(--display);
+            font-stretch: 100%;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .numero-urna.grande { font-size: 2.5rem; gap: 8px; }
+
+        /* ---------- Botões em pílula ---------- */
+
+        .botao {
+            --mx: 0px;
+            --my: 0px;
+            --escala: 1;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            min-height: 52px;
+            padding: 6px 6px 6px 24px;
+            border: 0;
+            border-radius: 999px;
+            font: 600 .9375rem/1 var(--texto);
+            text-decoration: none;
+            white-space: nowrap;
+            cursor: pointer;
+            transform: translate(var(--mx), var(--my)) scale(var(--escala));
+            transition: transform .6s var(--mola), background .4s var(--mola), box-shadow .4s var(--mola);
+        }
+
+        .botao:active { --escala: .97; }
+
+        .botao-icone {
+            display: grid;
+            place-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: transform .6s var(--mola);
+        }
+
+        .botao:hover .botao-icone { transform: translate(3px, -1px) scale(1.06); }
+
+        .botao-confirma {
+            background: var(--confirma);
+            color: #fff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 14px 28px -14px rgba(31, 138, 76, .8);
+        }
+
+        .botao-confirma:hover { background: var(--confirma-escuro); }
+        .botao-confirma .botao-icone { background: rgba(255, 255, 255, .16); }
+
+        .botao-contorno {
+            background: var(--painel);
+            color: var(--tinta);
+            box-shadow: 0 0 0 1px var(--anel-forte), 0 10px 22px -16px rgba(21, 25, 29, .4);
+        }
+
+        .botao-contorno .botao-icone { background: rgba(21, 25, 29, .06); }
+
+        .acoes { display: flex; gap: 12px; flex-wrap: wrap; }
+
+        /* ---------- Estado vazio ---------- */
+
+        .vazio { padding: 56px 32px; text-align: center; color: var(--suave); }
+        .vazio strong { display: block; margin-bottom: 6px; color: var(--tinta); font: 700 1.25rem/1.2 var(--display); }
+        .vazio .acoes { justify-content: center; margin-top: 24px; }
+
+        /* ---------- Revelação ao rolar ---------- */
+
+        .js [data-revelar] {
+            opacity: 0;
+            transform: translateY(48px);
+            transition: opacity 1s var(--mola), transform 1.2s var(--mola);
+            transition-delay: var(--atraso, 0s);
+        }
+
+        .js [data-revelar].visivel { opacity: 1; transform: none; }
+
+        /* ---------- Rodapé ---------- */
+
+        .rodape { padding: 32px 0 40px; color: var(--suave); font-size: .875rem; }
+
+        .rodape .container {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding-top: 28px;
+            box-shadow: inset 0 1px 0 var(--anel);
+        }
+
+        .rodape strong { color: var(--tinta); font-family: var(--display); font-stretch: 115%; }
+
+        @media (max-width: 767px) {
+            .container { padding: 0 16px; }
+            .ilha { gap: 16px; }
+            .ilha-links { display: none; }
+            .menu-botao { display: block; }
+            .hero { padding: 64px 0 40px; }
+            main { padding-bottom: 88px; }
+            .numero-urna.grande { font-size: 2rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+                transition-delay: 0s !important;
+            }
+        }
+    </style>
 </head>
+
+<body>
+
+    <div class="preloader" id="preloader" aria-hidden="true">
+        <div class="preloader-urna">
+            <div class="preloader-visor">
+                <% for (let i = 0; i < 3; i++) { %><span><i><%= '0\n1\n2\n3\n4\n5\n6\n7\n8\n9' %></i></span><% } %>
+            </div>
+            <div class="preloader-barra"><span></span></div>
+            <p>Preparando a urna</p>
+        </div>
+    </div>
+
+    <header class="topo">
+        <div class="ilha">
+            <a class="marca" href="/candidatos" data-cursor="Início">
+                <span class="marca-tecla" aria-hidden="true"></span>
+                Eleições FIC
+            </a>
+
+            <nav aria-label="Principal">
+                <ul class="ilha-links">
+                    <li><a href="/candidatos" data-nav>Candidatos</a></li>
+                    <li><a href="/painel" data-nav>Painel</a></li>
+                </ul>
+            </nav>
+
+            <button class="menu-botao" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-tela">
+                <span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="menu-tela" id="menu-tela">
+        <nav aria-label="Menu">
+            <ul>
+                <li><a href="/candidatos" data-nav>Candidatos</a></li>
+                <li><a href="/painel" data-nav>Painel</a></li>
+            </ul>
+        </nav>
+    </div>
