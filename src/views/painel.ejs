@@ -80,6 +80,34 @@
         box-shadow: 0 0 0 1px var(--anel);
     }
 
+    .acoes-linha { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .botao-pequena { min-height: 36px; padding: 4px 16px; font-size: .8125rem; }
+    .botao-pequena .botao-icone { display: none; }
+
+    tbody input[data-campo] {
+        width: 100%;
+        min-width: 90px;
+        padding: 6px 10px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        font: 500 .9375rem var(--texto);
+        color: var(--tinta);
+    }
+
+    tbody input[data-campo]:not([disabled]) {
+        background: var(--fundo);
+        box-shadow: inset 0 0 0 1px var(--anel);
+    }
+
+    code {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: var(--fundo-2);
+        font-size: .85em;
+    }
+
     @media (max-width: 900px) {
         .painel-grade { grid-template-columns: 1fr; }
         .bloco, .relatorio-cabeca { padding: 24px; }
@@ -98,35 +126,9 @@
             </p>
         </section>
 
-        <div class="painel-grade">
+        <div class="painel-grade" style="grid-template-columns: 1fr">
 
-            <section class="casca" aria-labelledby="titulo-cadastro" data-revelar>
-                <div class="nucleo bloco">
-                    <h2 class="secao-titulo" id="titulo-cadastro">Novo candidato</h2>
-                    <p class="bloco-descricao">Ele aparece na lista assim que for cadastrado.</p>
-
-                    <form action="/painel/cad-candidato" method="post">
-                        <div class="campo">
-                            <label for="nome">Nome</label>
-                            <input type="text" id="nome" name="nome" minlength="3" autocomplete="off" required>
-                            <small>Pelo menos 3 letras.</small>
-                        </div>
-
-                        <div class="campo">
-                            <label for="numero">Número na urna</label>
-                            <input type="number" id="numero" name="numero" min="1" max="99999" inputmode="numeric" required>
-                            <small>É o número que o eleitor digita para votar.</small>
-                        </div>
-
-                        <button type="submit" class="botao botao-confirma">
-                            Cadastrar candidato
-                            <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
-                        </button>
-                    </form>
-                </div>
-            </section>
-
-            <section class="casca" aria-labelledby="titulo-relatorio" data-revelar style="--atraso: .1s">
+            <section class="casca" aria-labelledby="titulo-relatorio" data-revelar>
                 <div class="nucleo">
                     <div class="relatorio-cabeca">
                         <h2 class="secao-titulo" id="titulo-relatorio">Relatório da eleição</h2>
@@ -169,7 +171,279 @@
 
         </div>
 
+        <div class="painel-grade" style="margin-top: 20px">
+
+            <section class="casca" aria-labelledby="titulo-cadastro-api" data-revelar style="--atraso: .14s">
+                <div class="nucleo bloco">
+                    <h2 class="secao-titulo" id="titulo-cadastro-api">Novo candidato via API</h2>
+                    <p class="bloco-descricao">Cadastra direto em <code>POST /api/candidatos</code>.</p>
+
+                    <form id="form-novo-candidato-api">
+                        <div class="campo">
+                            <label for="api-nome">Nome</label>
+                            <input type="text" id="api-nome" name="nome" minlength="3" autocomplete="off" required>
+                        </div>
+
+                        <div class="campo">
+                            <label for="api-origem">Origem</label>
+                            <input type="text" id="api-origem" name="origem" autocomplete="off">
+                        </div>
+
+                        <div class="campo">
+                            <label for="api-numero">Número na urna</label>
+                            <input type="number" id="api-numero" name="numeroUrna" min="1" max="99999" inputmode="numeric" required>
+                        </div>
+
+                        <div class="campo">
+                            <label for="api-foto">URL da foto</label>
+                            <input type="url" id="api-foto" name="foto" autocomplete="off">
+                        </div>
+
+                        <button type="submit" class="botao botao-confirma">
+                            Cadastrar via API
+                            <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="casca" aria-labelledby="titulo-lista-candidatos-api" data-revelar style="--atraso: .18s">
+                <div class="nucleo">
+                    <div class="relatorio-cabeca">
+                        <h2 class="secao-titulo" id="titulo-lista-candidatos-api">Candidatos (API)</h2>
+                    </div>
+
+                    <% if (candidatosApi && candidatosApi.length > 0) { %>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nome</th>
+                                    <th scope="col">Origem</th>
+                                    <th scope="col">Número</th>
+                                    <th scope="col">Foto (URL)</th>
+                                    <th scope="col">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% candidatosApi.forEach(c => { %>
+                                    <tr data-linha-candidato data-numero="<%= c.numeroUrna %>">
+                                        <td><input type="text" value="<%= c.nome %>" data-campo="nome" disabled></td>
+                                        <td><input type="text" value="<%= c.origem || '' %>" data-campo="origem" disabled></td>
+                                        <td><input type="number" value="<%= c.numeroUrna %>" data-campo="numeroUrna" disabled></td>
+                                        <td><input type="url" value="<%= c.foto || '' %>" data-campo="foto" disabled></td>
+                                        <td class="acoes-linha">
+                                            <button type="button" class="botao botao-contorno botao-pequena" data-acao="editar">Editar</button>
+                                            <button type="button" class="botao botao-contorno botao-pequena" data-acao="excluir">Excluir</button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="vazio">
+                            <strong>Nenhum candidato cadastrado via API</strong>
+                        </div>
+                    <% } %>
+                </div>
+            </section>
+
+        </div>
+
+        <div class="painel-grade" style="margin-top: 20px">
+
+            <section class="casca" aria-labelledby="titulo-cadastro-voto-api" data-revelar style="--atraso: .22s">
+                <div class="nucleo bloco">
+                    <h2 class="secao-titulo" id="titulo-cadastro-voto-api">Novo registro de votos</h2>
+                    <p class="bloco-descricao">Cria o registro em <code>POST /votos</code>, começando em zero.</p>
+
+                    <form id="form-novo-voto-api">
+                        <div class="campo">
+                            <label for="api-voto-candidato">Número do candidato</label>
+                            <input type="number" id="api-voto-candidato" name="candidatoId" min="1" max="99999" inputmode="numeric" required>
+                            <small>Precisa ser o número de um candidato já cadastrado.</small>
+                        </div>
+
+                        <button type="submit" class="botao botao-confirma">
+                            Criar registro de votos
+                            <span class="botao-icone"><%- include('partials/seta.ejs') %></span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="casca" aria-labelledby="titulo-lista-votos-api" data-revelar style="--atraso: .26s">
+                <div class="nucleo">
+                    <div class="relatorio-cabeca">
+                        <h2 class="secao-titulo" id="titulo-lista-votos-api">Votos (API)</h2>
+                    </div>
+
+                    <% if (votosApi && votosApi.length > 0) { %>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Candidato</th>
+                                    <th scope="col" class="num">Votos</th>
+                                    <th scope="col">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% votosApi.forEach(v => { %>
+                                    <tr data-linha-voto data-id="<%= v.candidatoId %>">
+                                        <td><%- include('partials/numero.ejs', { numero: v.candidatoId }) %></td>
+                                        <td class="num"><input type="number" value="<%= v.votos %>" data-campo="votos" disabled style="text-align: right; max-width: 100px"></td>
+                                        <td class="acoes-linha">
+                                            <button type="button" class="botao botao-contorno botao-pequena" data-acao="editar">Editar</button>
+                                            <button type="button" class="botao botao-contorno botao-pequena" data-acao="excluir">Excluir</button>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="vazio">
+                            <strong>Nenhum voto registrado via API</strong>
+                        </div>
+                    <% } %>
+                </div>
+            </section>
+
+        </div>
+
     </div>
 </main>
+
+<script>
+(function () {
+
+    // ---------- Candidatos: editar / excluir linha ----------
+    document.querySelectorAll('[data-linha-candidato]').forEach(function (tr) {
+        var numero = tr.getAttribute('data-numero')
+        var botaoEditar = tr.querySelector('[data-acao="editar"]')
+
+        botaoEditar.addEventListener('click', function () {
+            var editando = tr.getAttribute('data-editando') === '1'
+
+            if (!editando) {
+                tr.setAttribute('data-editando', '1')
+                tr.querySelectorAll('input[data-campo]').forEach(function (input) { input.disabled = false })
+                botaoEditar.textContent = 'Salvar'
+                return
+            }
+
+            var corpo = {}
+            tr.querySelectorAll('input[data-campo]').forEach(function (input) {
+                corpo[input.dataset.campo] = input.value
+            })
+
+            fetch('/api/candidato/' + numero, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(corpo)
+            })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('Falha ao salvar candidato')
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+
+        tr.querySelector('[data-acao="excluir"]').addEventListener('click', function () {
+            if (!confirm('Remover este candidato?')) return
+
+            fetch('/api/candidato/' + numero, { method: 'DELETE' })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('Falha ao remover candidato')
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+    })
+
+    // ---------- Candidatos: cadastrar via API ----------
+    var formNovoCandidato = document.getElementById('form-novo-candidato-api')
+    if (formNovoCandidato) {
+        formNovoCandidato.addEventListener('submit', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            var dados = Object.fromEntries(new FormData(formNovoCandidato))
+
+            fetch('/api/candidatos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            })
+                .then(function (resp) {
+                    if (!resp.ok) return resp.json().then(function (corpo) { throw new Error(corpo.error || 'Falha ao cadastrar candidato') })
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+    }
+
+    // ---------- Votos: editar / excluir linha ----------
+    document.querySelectorAll('[data-linha-voto]').forEach(function (tr) {
+        var id = tr.getAttribute('data-id')
+        var input = tr.querySelector('input[data-campo="votos"]')
+        var botaoEditar = tr.querySelector('[data-acao="editar"]')
+
+        botaoEditar.addEventListener('click', function () {
+            var editando = tr.getAttribute('data-editando') === '1'
+
+            if (!editando) {
+                tr.setAttribute('data-editando', '1')
+                input.disabled = false
+                botaoEditar.textContent = 'Salvar'
+                return
+            }
+
+            fetch('/votos/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ votos: input.value })
+            })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('Falha ao salvar votos')
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+
+        tr.querySelector('[data-acao="excluir"]').addEventListener('click', function () {
+            if (!confirm('Remover os votos deste candidato?')) return
+
+            fetch('/votos/' + id, { method: 'DELETE' })
+                .then(function (resp) {
+                    if (!resp.ok) throw new Error('Falha ao remover votos')
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+    })
+
+    // ---------- Votos: criar registro via API ----------
+    var formNovoVoto = document.getElementById('form-novo-voto-api')
+    if (formNovoVoto) {
+        formNovoVoto.addEventListener('submit', function (e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            var dados = Object.fromEntries(new FormData(formNovoVoto))
+
+            fetch('/votos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            })
+                .then(function (resp) {
+                    if (!resp.ok) return resp.json().then(function (corpo) { throw new Error(corpo.error || 'Falha ao criar registro de votos') })
+                    location.reload()
+                })
+                .catch(function (erro) { alert(erro.message) })
+        })
+    }
+
+})()
+</script>
 
 <%- include('partials/rodape.ejs') %>
